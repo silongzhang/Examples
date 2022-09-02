@@ -11,9 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BranchAndBound.cpp" />
+    <ClCompile Include="Callback.cpp" />
     <ClCompile Include="DataStructure.cpp" />
     <ClCompile Include="definition.cpp" />
+    <ClCompile Include="Instance.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Recursive.cpp" />
+    <ClCompile Include="Solver.cpp" />
+    <ClCompile Include="Test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataStructure.h" />

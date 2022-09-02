@@ -1,0 +1,135 @@
+\documentclass[UTF8]{article}
+\usepackage{abstract}
+\usepackage{hyperref}
+\usepackage[round]{natbib}
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{indentfirst}
+\usepackage{dashrule}
+\usepackage{makecell}
+\usepackage{bm}
+\usepackage{tabu}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{esdiff}
+\usepackage[flushleft]{threeparttable}
+\usepackage{picinpar}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{amsfonts,amssymb}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{upgreek}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{diagbox}
+\usepackage{caption}
+\usepackage{lineno}
+\usepackage{appendix}
+\usepackage{siunitx}
+\usepackage{longtable}
+
+\allowdisplaybreaks[4]
+\renewcommand{\abstractnamefont}{\Large\bfseries}
+\geometry{a4paper,left=2cm,right=2cm,top=2cm,bottom=2cm}
+\fontsize{12pt}{\baselineskip}
+\linespread{1.5}
+\selectfont
+\hypersetup{colorlinks=true, linkcolor=blue, filecolor=blue, urlcolor=blue, citecolor=cyan, }
+
+\titleformat*{\section}{\large\bfseries}
+\titleformat*{\subsection}{\normalsize\bfseries}
+\titleformat*{\subsubsection}{\normalsize\bfseries}
+
+\newtheorem{assumption}{Assumption}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+\newtheorem{property}{Property}
+\newtheorem{lemma}{Lemma}
+
+\newcommand{\vect}{\mathbf}
+\newcommand{\set}{\mathcal}
+\newcommand{\expect}{\mathbb{E}}
+\newcommand{\indicator}{\mathbb{I}}
+
+\floatname{algorithm}{Algorithm}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\title{\textbf{\Large Benders Decomposition}}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+$\set{R}$: the set of real numbers.
+
+$\set{R}_{+}$: the set of nonnegative real numbers.
+
+$\set{R}_{+}^{n}$: the set of $n$-dimensional nonnegative real vectors.
+
+$\set{Z}$: the set of integers.
+
+$\set{Z}_{+}$: the set of nonnegative integers.
+
+$\set{Z}_{+}^{n}$: the set of $n$-dimensional nonnegative integer vectors.
+
+$\vect{c} \in \set{R}^{m}$, $\vect{d} \in \set{R}^{n}$, $\vect{f} \in \set{R}^{p}$, $\vect{g} \in \set{R}^{q}$, $\vect{A} \in \set{R}^{p \times m}$, $\vect{B} \in \set{R}^{p \times n}$, $\vect{E} \in \set{R}^{q \times m}$.
+
+The original mixed integer linear programming model is formulated as follows.
+\begin{align}
+	(\text{\rm P1}) \qquad z_{\rm P1} = \min \vect{c}' \vect{x} + \vect{d}' \vect{y}, & \\
+	\text{\rm s.t.} \qquad \vect{A} \vect{x} + \vect{B} \vect{y} \ge \vect{f}, & \\
+	\vect{E} \vect{x} \ge \vect{g}, & \\
+	\vect{x} \in \set{Z}_{+}^{m}, & \\
+	\vect{y} \in \set{R}_{+}^{n}. &
+\end{align}
+
+Given the value of $\vect{x}$, the optimal objective value associated with variable $\vect{y}$ can be described as follows.
+\begin{align}
+	(\text{\rm P2}(\vect{x})) \qquad z_{{\rm P2}(\vect{x})} = \min \vect{d}' \vect{y}, & \\
+	\text{\rm s.t.} \qquad \vect{B} \vect{y} \ge \vect{f} - \vect{A} \vect{x}, & \\
+	\vect{y} \in \set{R}_{+}^{n}, &
+\end{align}
+where $z_{{\rm P2}(\vect{x})} = + \infty$ if model P2($\vect{x}$) is infeasible.
+
+The dual of model P2($\vect{x}$) is as follows.
+\begin{align}
+	(\text{\rm D2}(\vect{x})) \qquad z_{{\rm D2}(\vect{x})} = \max \bm{\pi}' (\vect{f} - \vect{A} \vect{x}), & \\
+	\text{\rm s.t.} \qquad \bm{\pi}' \vect{B} \le \vect{d}', & \\
+	\bm{\pi} \in \set{R}_{+}^{p}. &
+\end{align}
+
+Note that the feasible set $\Pi = \{\bm{\pi} \in \set{R}_{+}^{p}: \bm{\pi}' \vect{B} \le \vect{d}'\}$ is independent of $\vect{x}$. If $\Pi$ is empty, then D2($\vect{x}$) is infeasible for all $\vect{x} \in \set{Z}_{+}^{m}$. Because the infeasibility of D2($\vect{x}$) implies that either (i) P2($\vect{x}$) is infeasible, or (ii) $z_{{\rm P2}(\vect{x})} = - \infty$, we conclude that the original problem P1 is either infeasible or unbounded.
+
+In the following, we assume that the original problem P1 is feasible with a finite optimal objective value, i.e., $\Pi$ is nonempty. Furthermore, denote $\{\bm{\pi}_i: i \in \set{I}\}$ as the set of extreme points of $\Pi$, and $\{\bm{\pi}_j: j \in \set{J}\}$ as a complete set of extreme rays of $\Pi$. Then we have 
+\begin{itemize}
+	\item P2($\vect{x}$) is feasible if and only if $\bm{\pi}_{j}^{'} (\vect{f} - \vect{A} \vect{x}) \le 0$, $\forall~ j \in \set{J}$.
+	\item If P2($\vect{x}$) is feasible with finite optimal objective value, then $z_{{\rm P2}(\vect{x})} = z_{{\rm D2}(\vect{x})} = \max_{i \in \set{I}} \bm{\pi}_{i}^{'} (\vect{f} - \vect{A} \vect{x})$.
+\end{itemize}
+
+Therefore, 
+\begin{align}
+	z_{\rm P1} = \min \left\{\vect{c}' \vect{x} + z_{{\rm P2}(\vect{x})}: \vect{E} \vect{x} \ge \vect{g}, \vect{x} \in \set{Z}_{+}^{m}\right\} = \min \vect{c}' \vect{x} + \eta, & \\
+	\text{\rm s.t.} \qquad \vect{E} \vect{x} \ge \vect{g}, & \\
+	\eta \ge \bm{\pi}_{i}^{'} (\vect{f} - \vect{A} \vect{x}), & \qquad \forall~ i \in \set{I}, \\
+	\bm{\pi}_{j}^{'} (\vect{f} - \vect{A} \vect{x}) \le 0, & \qquad \forall~ j \in \set{J}, \\
+	\vect{x} \in \set{Z}_{+}^{m}. & 
+\end{align}
+
+
+
+
+\bibliographystyle{plainnat}
+
+\end{document}
