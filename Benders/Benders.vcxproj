@@ -15,7 +15,6 @@
     <ClCompile Include="Callback.cpp" />
     <ClCompile Include="DataStructure.cpp" />
     <ClCompile Include="definition.cpp" />
-    <ClCompile Include="Instance.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Recursive.cpp" />
     <ClCompile Include="Solver.cpp" />

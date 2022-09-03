@@ -35,15 +35,15 @@ public:
 };
 
 
-class Contraint {
+class Constraint {
 public:
 	ConstraintType type;
 	vector<double> coefInt;
 	vector<double> coefCont;
 	double rhs;
 
-	Contraint() :type(ConstraintType::Eq), rhs(0) {}
-	Contraint(ConstraintType tp, const vector<double>& cfIt, const vector<double>& cfCt, double rgh) :type(tp), coefInt(cfIt), coefCont(cfCt), rhs(rgh) {}
+	Constraint() :type(ConstraintType::Eq), rhs(0) {}
+	Constraint(ConstraintType tp, const vector<double>& cfIt, const vector<double>& cfCt, double rgh) :type(tp), coefInt(cfIt), coefCont(cfCt), rhs(rgh) {}
 };
 
 
@@ -52,14 +52,15 @@ public:
 	Variable varInt;
 	Variable varCont;
 	Objective obj;
-	vector<Contraint> cpCons;				// Coupling constraints.
-	vector<Contraint> itCons;				// Constraints involving only integer variables.
+	vector<Constraint> cpCons;				// Coupling constraints.
+	vector<Constraint> itCons;				// Constraints involving only integer variables.
 
 	Instance() {}
-	Instance(const Variable& vrIt, const Variable& vrCt, const Objective& objective, const vector<Contraint>& cpCs, const vector<Contraint>& itCs) :varInt(vrIt), varCont(vrCt), obj(objective), cpCons(cpCs), itCons(itCs) {
+	Instance(const Variable& vrIt, const Variable& vrCt, const Objective& objective, const vector<Constraint>& cpCs, const vector<Constraint>& itCs) :varInt(vrIt), varCont(vrCt), obj(objective), cpCons(cpCs), itCons(itCs) {
 		if (!consistent()) printErrorAndExit("Instance", exception());
 	}
 	bool consistent() const;
+	bool solveSolver() const;
 };
 
 
@@ -85,5 +86,9 @@ public:
 
 
 vector<double> generateRandomVector(default_random_engine& engine, int N, pair<double, double> range, double sparsity, bool canEmpty);
-void setRandomSignAndRhs(default_random_engine& engine, const vector<double>& midInt, const vector<double>& midCont, Contraint& cons, double ratioEq, double ratioLe, double ratioGe, double redundancy);
+void setRandomSignAndRhs(default_random_engine& engine, const vector<double>& midInt, const vector<double>& midCont, Constraint& cons, double ratioEq, double ratioLe, double ratioGe, double redundancy);
+
+
+// Solver
+IloRange genConsSolver(IloEnv env, IloIntVarArray X, IloNumVarArray Y, const Constraint& cons);
 

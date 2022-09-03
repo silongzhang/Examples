@@ -42,7 +42,7 @@ vector<double> generateRandomVector(default_random_engine& engine, int N, pair<d
 }
 
 
-void setRandomSignAndRhs(default_random_engine& engine, const vector<double>& midInt, const vector<double>& midCont, Contraint& cons, double ratioEq, double ratioLe, double ratioGe, double redundancy) {
+void setRandomSignAndRhs(default_random_engine& engine, const vector<double>& midInt, const vector<double>& midCont, Constraint& cons, double ratioEq, double ratioLe, double ratioGe, double redundancy) {
 	uniform_real_distribution<double> unifZeroOne(0, 1);
 	try {
 		if (midInt.size() != cons.coefInt.size() || midCont.size() != cons.coefCont.size()) throw exception();
