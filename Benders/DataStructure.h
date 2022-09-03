@@ -66,7 +66,19 @@ public:
 // Test
 class ParameterTest {
 public:
+	unsigned seed;
+	int NInt, NCont;
+	double MaxUBInt, MaxUBCont;
+	double ratioInfUBInt, ratioInfUBCont;
+	bool minimization;
+	pair<double, double> rangeObjCoefInt, rangeObjCoefCont;
+	pair<double, double> rangeConsCoefInt, rangeConsCoefCont;
+	double sparsity;
+	double redundancy;
+	double ratioEq, ratioLe, ratioGe;
+	int NCpCons, NItCons;
 
+	ParameterTest() :seed(time(0)), NInt(0), NCont(0), MaxUBInt(0), MaxUBCont(0), ratioInfUBInt(0), ratioInfUBCont(0), minimization(true), sparsity(0), redundancy(0), ratioEq(0), ratioLe(0), ratioGe(0), NCpCons(0), NItCons(0) {}
 };
 
 
