@@ -2,6 +2,10 @@
 
 #include"definition.h"
 
+// Assumption: # of integer variables > 0 and # of continuous variables > 0.
+
+constexpr auto INFUB = -1;
+
 enum class VariableType { Continuous, Integer };
 enum class ObjectiveType { Minimization, Maximization };
 enum class ContraintType { Eq, Le, Ge };
@@ -13,7 +17,7 @@ class Variable {
 public:
 	VariableType type;
 	int size;
-	vector<double> upperbounds;
+	vector<double> upperbounds;					// 0 <= Variable[i] <= + \infty if upperbounds[i] = INFUB.
 
 	Variable() :type(VariableType::Continuous), size(0) {}
 	Variable(VariableType tp, int sz, const vector<double>& ub) :type(tp), size(sz), upperbounds(ub) {}
