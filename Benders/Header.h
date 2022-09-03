@@ -41,6 +41,7 @@ using std::mutex;
 using std::lock_guard;
 using std::default_random_engine;
 using std::uniform_real_distribution;
+using std::uniform_int_distribution;
 using std::normal_distribution;
 using std::string;
 using std::vector;

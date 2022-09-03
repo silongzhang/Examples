@@ -8,7 +8,7 @@ constexpr auto INFUB = -1;
 
 enum class VariableType { Continuous, Integer };
 enum class ObjectiveType { Minimization, Maximization };
-enum class ContraintType { Eq, Le, Ge };
+enum class ConstraintType { Eq, Le, Ge };
 
 
 // Assumption: variables are already transformed to be nonnegative.
@@ -37,13 +37,13 @@ public:
 
 class Contraint {
 public:
-	ContraintType type;
+	ConstraintType type;
 	vector<double> coefInt;
 	vector<double> coefCont;
 	double rhs;
 
-	Contraint() :type(ContraintType::Eq), rhs(0) {}
-	Contraint(ContraintType tp, const vector<double>& cfIt, const vector<double>& cfCt, double rgh) :type(tp), coefInt(cfIt), coefCont(cfCt), rhs(rgh) {}
+	Contraint() :type(ConstraintType::Eq), rhs(0) {}
+	Contraint(ConstraintType tp, const vector<double>& cfIt, const vector<double>& cfCt, double rgh) :type(tp), coefInt(cfIt), coefCont(cfCt), rhs(rgh) {}
 };
 
 
@@ -79,6 +79,11 @@ public:
 	int NCpCons, NItCons;
 
 	ParameterTest() :seed(time(0)), NInt(0), NCont(0), MaxUBInt(0), MaxUBCont(0), ratioInfUBInt(0), ratioInfUBCont(0), minimization(true), sparsity(0), redundancy(0), ratioEq(0), ratioLe(0), ratioGe(0), NCpCons(0), NItCons(0) {}
+	bool valid() const;
+	Instance generateInstance() const;
 };
 
+
+vector<double> generateRandomVector(default_random_engine& engine, int N, pair<double, double> range, double sparsity, bool canEmpty);
+void setRandomSignAndRhs(default_random_engine& engine, const vector<double>& midInt, const vector<double>& midCont, Contraint& cons, double ratioEq, double ratioLe, double ratioGe, double redundancy);
 
