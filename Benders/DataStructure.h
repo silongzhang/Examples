@@ -47,6 +47,22 @@ public:
 };
 
 
+class Solution {
+public:
+	SolutionStatus status;
+	double objective;
+	vector<double> valueInt;
+	double valueEta;
+	vector<double> valueCont;
+
+	int optCutLP, optCutIP, feasCutLP, feasCutIP;
+	double elapsedTime;
+
+	Solution() :status(SolutionStatus::Unkown), objective(InfinityPos), valueEta(InfinityNeg), optCutLP(0), optCutIP(0), feasCutLP(0), feasCutIP(0), elapsedTime(0) {}
+	void clear();
+};
+
+
 class Instance {
 public:
 	Variable varInt;
@@ -63,7 +79,14 @@ public:
 	bool standard() const;
 	void standardize();
 	bool solveSolver() const;
+	Solution solveBendersRecursive() const;
 };
+
+
+IloExpr product(IloEnv env, const vector<double>& coefs, IloNumVarArray vars);
+IloExpr product(IloEnv env, const vector<double>& coefs, IloIntVarArray vars);
+void addConstraint(IloModel model, const vector<double>& coefs, IloNumVarArray vars, ConstraintType type, double rhs);
+IloRange genCons(IloEnv env, const vector<double>& coefs, IloNumVarArray vars, ConstraintType type, double rhs);
 
 
 // Test
@@ -93,4 +116,7 @@ void setRandomSignAndRhs(default_random_engine& engine, const vector<double>& mi
 
 // Solver
 IloRange genConsSolver(IloEnv env, IloIntVarArray X, IloNumVarArray Y, const Constraint& cons);
+
+
+// Recursive
 

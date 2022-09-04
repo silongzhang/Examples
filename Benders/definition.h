@@ -10,7 +10,7 @@ constexpr auto MILLI = 1e-3;
 constexpr auto PPM = 1e-6;
 constexpr auto PPB = 1e-9;
 constexpr auto TenTh = 1e4;
-constexpr auto InfinityPos = 1e8;
+constexpr auto InfinityPos = INFINITY;
 constexpr auto InfinityNeg = -InfinityPos;
 
 typedef IloArray<IloNumVarArray> IloNumVarArray2;

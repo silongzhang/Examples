@@ -73,7 +73,7 @@ void Instance::standardize() {
 		if (!consistent()) throw exception();
 
 		if (obj.type == ObjectiveType::Maximization) {
-			obj.type == ObjectiveType::Minimization;
+			obj.type = ObjectiveType::Minimization;
 			for (auto& num : obj.coefInt) num = -num;
 			for (auto& num : obj.coefCont) num = -num;
 			cout << "*****************************" << endl;
@@ -96,5 +96,79 @@ void Instance::standardize() {
 	catch (const exception& exc) {
 		printErrorAndExit("Instance::standardize", exc);
 	}
+}
+
+
+void Solution::clear() {
+	status = SolutionStatus::Unkown;
+	objective = InfinityPos;
+	valueInt.clear();
+	valueEta = InfinityNeg;
+	valueCont.clear();
+
+	optCutLP = optCutIP = feasCutLP = feasCutIP = 0;
+	elapsedTime = 0;
+}
+
+
+IloExpr product(IloEnv env, const vector<double>& coefs, IloNumVarArray vars) {
+	IloExpr expr(env);
+	try {
+		if (coefs.size() != vars.getSize() || coefs.empty()) throw exception();
+
+		for (int i = 0; i < coefs.size(); ++i)
+			expr += coefs[i] * vars[i];
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("product", exc);
+	}
+	return expr;
+}
+
+
+IloExpr product(IloEnv env, const vector<double>& coefs, IloIntVarArray vars) {
+	IloExpr expr(env);
+	try {
+		if (coefs.size() != vars.getSize() || coefs.empty()) throw exception();
+
+		for (int i = 0; i < coefs.size(); ++i)
+			expr += coefs[i] * vars[i];
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("product", exc);
+	}
+	return expr;
+}
+
+
+void addConstraint(IloModel model, const vector<double>& coefs, IloNumVarArray vars, ConstraintType type, double rhs) {
+	try {
+		if (coefs.size() != vars.getSize() || coefs.empty()) throw exception();
+
+		IloExpr expr = product(model.getEnv(), coefs, vars);
+		if (type == ConstraintType::Eq) model.add(expr == rhs);
+		else if (type == ConstraintType::Le) model.add(expr <= rhs);
+		else model.add(expr >= rhs);
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("addConstraint", exc);
+	}
+}
+
+
+IloRange genCons(IloEnv env, const vector<double>& coefs, IloNumVarArray vars, ConstraintType type, double rhs) {
+	IloRange result;
+	try {
+		if (coefs.size() != vars.getSize() || coefs.empty()) throw exception();
+
+		IloExpr expr = product(env, coefs, vars);
+		if (type == ConstraintType::Eq) result = IloRange(env, rhs, expr, rhs);
+		else if (type == ConstraintType::Le) result = IloRange(env, -IloInfinity, expr, rhs);
+		else result = IloRange(env, rhs, expr, IloInfinity);
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("genCons", exc);
+	}
+	return result;
 }
 

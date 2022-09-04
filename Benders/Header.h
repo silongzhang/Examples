@@ -23,6 +23,7 @@
 #include<bitset>
 #include<algorithm>
 #include<functional>
+#include<numeric>
 
 using std::istream;
 using std::ostream;
@@ -71,4 +72,5 @@ using std::next;
 using std::shuffle;
 using std::random_shuffle;
 using std::reverse;
+using std::inner_product;
 
