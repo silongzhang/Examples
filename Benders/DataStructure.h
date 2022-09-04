@@ -60,6 +60,8 @@ public:
 		if (!consistent()) printErrorAndExit("Instance", exception());
 	}
 	bool consistent() const;
+	bool standard() const;
+	void standardize();
 	bool solveSolver() const;
 };
 

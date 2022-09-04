@@ -53,3 +53,48 @@ bool Instance::consistent() const {
 	return true;
 }
 
+
+// Whether (i) it is consistent, (ii) it is a minimization problem and (iii) for any continuous variable y, y >= 0 is specified in the domain whereas y >= a and y <= b are specified in constraints.
+bool Instance::standard() const {
+	if (!consistent()) return false;
+
+	if (obj.type == ObjectiveType::Maximization) return false;
+
+	for (const auto elem : varCont.upperbounds)
+		if (!equalToReal(elem, INFUB, PPM))
+			return false;
+
+	return true;
+}
+
+
+void Instance::standardize() {
+	try {
+		if (!consistent()) throw exception();
+
+		if (obj.type == ObjectiveType::Maximization) {
+			obj.type == ObjectiveType::Minimization;
+			for (auto& num : obj.coefInt) num = -num;
+			for (auto& num : obj.coefCont) num = -num;
+			cout << "*****************************" << endl;
+			cout << "The maximization problem is transformed into a minimization problem." << endl;
+			cout << "*****************************" << endl;
+		}
+
+		const int NInt = varInt.size, NCont = varCont.size;
+		vector<double> cfIt(NInt, 0);
+		for (int i = 0; i < varCont.upperbounds.size(); ++i) {
+			if (!equalToReal(varCont.upperbounds[i], INFUB, PPM)) {
+				vector<double> cfCt(NCont, 0);
+				cfCt[i] = 1;
+				cpCons.push_back(Constraint(ConstraintType::Le, cfIt, cfCt, varCont.upperbounds[i]));
+
+				varCont.upperbounds[i] = INFUB;
+			}
+		}
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("Instance::standardize", exc);
+	}
+}
+
