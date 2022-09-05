@@ -233,6 +233,8 @@ void Solution::renew(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, IloCple
 
 
 void Solution::print() const {
-	cout << "objective = " << objective << '\t' << "LB = " << LB << '\t' << "nOptCutLP = " << nOptCutLP << '\t' << "nOptCutIP = " << nOptCutIP << '\t' << "nFeasCutLP = " << nFeasCutLP << '\t' << "nFeasCutIP = " << nFeasCutIP << '\t' << "elapsedTime = " << elapsedTime << endl;
+	cout << "status = ";
+	::print(status);
+	cout << '\t' << "objective = " << objective << '\t' << "LB = " << LB << '\t' << "nOptCutLP = " << nOptCutLP << '\t' << "nOptCutIP = " << nOptCutIP << '\t' << "nFeasCutLP = " << nFeasCutLP << '\t' << "nFeasCutIP = " << nFeasCutIP << '\t' << "elapsedTime = " << elapsedTime << endl;
 }
 

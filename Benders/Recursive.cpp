@@ -76,6 +76,7 @@ Solution Instance::solveBendersRecursive(const ParameterAlgorithm& parameter) co
 			else if (cplexRMP.getStatus() == IloAlgorithm::Status::Optimal) {
 				currentValInt = getValues(cplexRMP, X);
 				currentValEta = cplexRMP.getValue(eta);
+				incumbent.LB = cplexRMP.getObjValue();			// Renew LB.
 
 				for (int i = 0; i < consSP.getSize(); ++i) {
 					double rhs = cpCons[i].rhs - inner_product(cpCons[i].coefInt.begin(), cpCons[i].coefInt.end(), currentValInt.begin(), 0.0);
@@ -83,13 +84,6 @@ Solution Instance::solveBendersRecursive(const ParameterAlgorithm& parameter) co
 				}
 			}
 			else throw exception();
-
-
-
-
-
-
-
 
 			solveModel(cplexSP);								// Solve the subproblem.
 			IloNumArray dualSP(env);
@@ -109,18 +103,14 @@ Solution Instance::solveBendersRecursive(const ParameterAlgorithm& parameter) co
 			}
 			else if (cplexSP.getStatus() == IloAlgorithm::Status::Unbounded) {
 				cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-				cout << "The instance is unbounded! Terminate!" << endl;
-				incumbent.status = SolutionStatus::Unbounded;
+				cout << "The instance might be unbounded! Terminate!" << endl;
+				incumbent.status = SolutionStatus::Unkown;
 				break;
 			}
 			else if (cplexSP.getStatus() == IloAlgorithm::Status::Optimal) {
-				if (cplexRMP.getStatus() == IloAlgorithm::Status::Optimal) {
-					incumbent.LB = cplexRMP.getObjValue();								// Renew LB.
-
-					if (integral && greaterThanReal(incumbent.objective, cplexRMP.getObjValue() - cplexRMP.getValue(eta) + cplexSP.getObjValue(), PPM)) {
-						incumbent.renew(cplexRMP, X, eta, cplexSP, Y);					// Renew UB.
-						if (incumbent.status != SolutionStatus::Feasible) throw exception();
-					}
+				if (integral && greaterThanReal(incumbent.objective, cplexRMP.getObjValue() - cplexRMP.getValue(eta) + cplexSP.getObjValue(), PPM)) {
+					incumbent.renew(cplexRMP, X, eta, cplexSP, Y);						// Renew UB.
+					if (incumbent.status != SolutionStatus::Feasible) throw exception();
 				}
 
 				if (lessThanReal(currentValEta, cplexSP.getObjValue(), PPM)) {

@@ -79,3 +79,27 @@ bool isInteger(double num, double threshold) {
 	return equalToReal(num, ceil(num), threshold) || equalToReal(num, floor(num), threshold);
 }
 
+
+void print(SolutionStatus status) {
+	switch (status)
+	{
+	case SolutionStatus::Unkown:
+		cout << "Unkown";
+		break;
+	case SolutionStatus::Infeasible:
+		cout << "Infeasible";
+		break;
+	case SolutionStatus::Unbounded:
+		cout << "Unbounded";
+		break;
+	case SolutionStatus::Feasible:
+		cout << "Feasible";
+		break;
+	case SolutionStatus::Optimal:
+		cout << "Optimal";
+		break;
+	default:
+		break;
+	}
+}
+
