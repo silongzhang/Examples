@@ -20,7 +20,7 @@ typedef IloArray<IloIntVarArray> IloIntVarArray2;
 typedef IloArray<IloBoolVarArray> IloBoolVarArray2;
 typedef IloArray<IloBoolVarArray2> IloBoolVarArray3;
 
-enum class SolutionStatus { Unkown, Infeasible, Feasible, Optimal };
+enum class SolutionStatus { Unkown, Infeasible, Unbounded, Feasible, Optimal };
 
 void printErrorAndExit(const string &str, const exception &exc);
 void terminate(const string& str);
@@ -33,6 +33,7 @@ bool operator<=(const bitset<NMAX>& lhs, const bitset<NMAX>& rhs);
 bool solveModel(IloCplex& cplex);
 double EuclideanDistance(const double x1, const double y1, const double x2, const double y2);
 double setPrecision(const double num, const bool upDown, const int precision);
+bool isInteger(double num, double threshold);
 
 template<typename T>
 void print1(ostream &os, const T &cont, const char character) {

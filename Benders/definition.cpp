@@ -74,3 +74,8 @@ double setPrecision(const double num, const bool upDown, const int precision) {
 	return upDown ? ceil(num * pow(10, precision)) / pow(10, precision) : floor(num * pow(10, precision)) / pow(10, precision);
 }
 
+
+bool isInteger(double num, double threshold) {
+	return equalToReal(num, ceil(num), threshold) || equalToReal(num, floor(num), threshold);
+}
+

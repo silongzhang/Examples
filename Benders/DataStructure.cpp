@@ -102,11 +102,12 @@ void Instance::standardize() {
 void Solution::clear() {
 	status = SolutionStatus::Unkown;
 	objective = InfinityPos;
+	LB = InfinityNeg;
 	valueInt.clear();
 	valueEta = InfinityNeg;
 	valueCont.clear();
 
-	optCutLP = optCutIP = feasCutLP = feasCutIP = 0;
+	nOptCutLP = nOptCutIP = nFeasCutLP = nFeasCutIP = 0;
 	elapsedTime = 0;
 }
 
@@ -170,5 +171,63 @@ IloRange genCons(IloEnv env, const vector<double>& coefs, IloNumVarArray vars, C
 		printErrorAndExit("genCons", exc);
 	}
 	return result;
+}
+
+
+vector<double> getValues(IloCplex cplex, IloNumVarArray vars) {
+	vector<double> result;
+	try {
+		result.resize(vars.getSize());
+		for (int i = 0; i < vars.getSize(); ++i) result[i] = cplex.getValue(vars[i]);
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("getValues", exc);
+	}
+	return result;
+}
+
+
+IloExpr Instance::exprRhs(IloEnv env, IloNumArray duals, IloNumVarArray vars) const {
+	IloExpr expr(env);
+	try {
+		if (duals.getSize() != cpCons.size() || vars.getSize() != varInt.size) throw exception();
+
+		for (int i = 0; i < cpCons.size(); ++i) {
+			expr += duals[i] * (cpCons[i].rhs - product(env, cpCons[i].coefInt, vars));
+		}
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("Instance::exprRhs", exc);
+	}
+	return expr;
+}
+
+
+void setRhs(IloRange constraint, ConstraintType type, double rhs) {
+	if (type == ConstraintType::Eq) constraint.setBounds(rhs, rhs);
+	else if (type == ConstraintType::Le) constraint.setUB(rhs);
+	else constraint.setLB(rhs);
+}
+
+
+void Solution::renew(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, IloCplex cplexSP, IloNumVarArray Y) {
+	try {
+		objective = cplexRMP.getObjValue() + cplexSP.getObjValue();
+		LB = cplexRMP.getObjValue() + cplexRMP.getValue(eta);
+		valueInt = getValues(cplexRMP, X);
+		valueEta = cplexRMP.getValue(eta);
+		valueCont = getValues(cplexSP, Y);
+
+		status = SolutionStatus::Feasible;
+		for (const auto num : valueInt) {
+			if (!isInteger(num, PPM)) {
+				status = SolutionStatus::Infeasible;
+				break;
+			}
+		}
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("Solution::renew", exc);
+	}
 }
 

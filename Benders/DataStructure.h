@@ -12,7 +12,6 @@ enum class ConstraintType { Eq, Le, Ge };
 
 
 // Assumption: variables are already transformed to be nonnegative.
-// The nonnegativity of continuous variables ensures the existence of extreme points of feasible subprolems.
 class Variable {
 public:
 	VariableType type;
@@ -50,16 +49,30 @@ public:
 class Solution {
 public:
 	SolutionStatus status;
-	double objective;
+	double objective;					// The objective of the solution, which is also an upper bound.
+	double LB;							// The lower bound of the optimal objective value of the instance.
 	vector<double> valueInt;
 	double valueEta;
 	vector<double> valueCont;
 
-	int optCutLP, optCutIP, feasCutLP, feasCutIP;
+	int nOptCutLP, nOptCutIP, nFeasCutLP, nFeasCutIP;
 	double elapsedTime;
 
-	Solution() :status(SolutionStatus::Unkown), objective(InfinityPos), valueEta(InfinityNeg), optCutLP(0), optCutIP(0), feasCutLP(0), feasCutIP(0), elapsedTime(0) {}
+	Solution() :status(SolutionStatus::Unkown), objective(InfinityPos), LB(InfinityNeg), valueEta(InfinityNeg), nOptCutLP(0), nOptCutIP(0), nFeasCutLP(0), nFeasCutIP(0), elapsedTime(0) {}
 	void clear();
+	void renew(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, IloCplex cplexSP, IloNumVarArray Y);
+};
+
+
+class ParameterAlgorithm {
+public:
+	double timeLimit;
+	double optThreshold;
+
+	ParameterAlgorithm() :timeLimit(InfinityPos), optThreshold(0) {}
+	bool stop(clock_t last, double UB, double LB) const {
+		return !lessThanReal(runTime(last), timeLimit, PPM) || !greaterThanReal(abs((UB - LB) / LB), optThreshold, 0);
+	}
 };
 
 
@@ -79,7 +92,8 @@ public:
 	bool standard() const;
 	void standardize();
 	bool solveSolver() const;
-	Solution solveBendersRecursive() const;
+	IloExpr exprRhs(IloEnv env, IloNumArray duals, IloNumVarArray vars) const;
+	Solution solveBendersRecursive(const ParameterAlgorithm& parameter) const;
 };
 
 
@@ -87,6 +101,8 @@ IloExpr product(IloEnv env, const vector<double>& coefs, IloNumVarArray vars);
 IloExpr product(IloEnv env, const vector<double>& coefs, IloIntVarArray vars);
 void addConstraint(IloModel model, const vector<double>& coefs, IloNumVarArray vars, ConstraintType type, double rhs);
 IloRange genCons(IloEnv env, const vector<double>& coefs, IloNumVarArray vars, ConstraintType type, double rhs);
+vector<double> getValues(IloCplex cplex, IloNumVarArray vars);
+void setRhs(IloRange constraint, ConstraintType type, double rhs);
 
 
 // Test
