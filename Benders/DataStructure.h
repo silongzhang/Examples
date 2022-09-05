@@ -61,6 +61,7 @@ public:
 	Solution() :status(SolutionStatus::Unkown), objective(InfinityPos), LB(InfinityNeg), valueEta(InfinityNeg), nOptCutLP(0), nOptCutIP(0), nFeasCutLP(0), nFeasCutIP(0), elapsedTime(0) {}
 	void clear();
 	void renew(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, IloCplex cplexSP, IloNumVarArray Y);
+	void print() const;
 };
 
 

@@ -38,11 +38,11 @@ Solution Instance::solveBendersRecursive(const ParameterAlgorithm& parameter) co
 
 		// Set constraints other than Benders cuts in the RMP.
 		for (const auto& cons : itCons) addConstraint(modelRMP, cons.coefInt, X, cons.type, cons.rhs);
-		modelRMP.add(eta >= -IloInfinity / 2);					// Avoid the RMP to be unbounded.
+		modelRMP.add(eta >= InfinityNeg);						// Avoid the RMP to be unbounded.
 
 		// Set the initial values of X and eta.
 		vector<double> currentValInt = vector<double>(NInt, 0);
-		double currentValEta = -IloInfinity;
+		double currentValEta = InfinityNeg;
 
 		// Set constraints in the SP.
 		IloRangeArray consSP(env);
@@ -58,22 +58,22 @@ Solution Instance::solveBendersRecursive(const ParameterAlgorithm& parameter) co
 		bool integral = false;									// Whether integrality constraints are restored.
 		for (int iter = 1; !parameter.stop(last, incumbent.objective, incumbent.LB); ++iter) {
 			cout << "+++++++++++++++++++++++++++++" << endl;
-			cout << "Iter = " << iter << '\t' << "Integral = " << integral << '\t' << "UB = " << incumbent.objective << '\t' << "LB = " << incumbent.LB << endl;
+			cout << "Iter = " << iter << '\t' << "Integral = " << integral << '\t' << "UB = " << incumbent.objective << '\t' << "LB = " << incumbent.LB << '\t' << "nOptCutLP = " << incumbent.nOptCutLP << '\t' << "nOptCutIP = " << incumbent.nOptCutIP << '\t' << "nFeasCutLP = " << incumbent.nFeasCutLP << '\t' << "nFeasCutIP = " << incumbent.nFeasCutIP << endl;
 
-			cplexRMP.solve();									// Solve the RMP.
-			if (cplexRMP.getCplexStatus() == IloCplex::CplexStatus::Infeasible) {
+			solveModel(cplexRMP);								// Solve the RMP.
+			if (cplexRMP.getStatus() == IloAlgorithm::Status::Infeasible) {
 				cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
 				cout << "The instance is infeasible! Terminate!" << endl;
 				incumbent.status = SolutionStatus::Infeasible;
 				break;
 			}
-			else if (cplexRMP.getCplexStatus() == IloCplex::CplexStatus::Unbounded) {
+			else if (cplexRMP.getStatus() == IloAlgorithm::Status::Unbounded) {
 				cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
 				cout << "The current RMP might be unbounded (Assumption 6 is not satisfied)! Terminate!" << endl;
 				incumbent.status = SolutionStatus::Unkown;
 				break;
 			}
-			else if (cplexRMP.getCplexStatus() == IloCplex::CplexStatus::Optimal) {
+			else if (cplexRMP.getStatus() == IloAlgorithm::Status::Optimal) {
 				currentValInt = getValues(cplexRMP, X);
 				currentValEta = cplexRMP.getValue(eta);
 
@@ -84,7 +84,14 @@ Solution Instance::solveBendersRecursive(const ParameterAlgorithm& parameter) co
 			}
 			else throw exception();
 
-			cplexSP.solve();									// Solve the subproblem.
+
+
+
+
+
+
+
+			solveModel(cplexSP);								// Solve the subproblem.
 			IloNumArray dualSP(env);
 			try {
 				cplexSP.getDuals(dualSP, consSP);				// Get dual values.
@@ -96,21 +103,21 @@ Solution Instance::solveBendersRecursive(const ParameterAlgorithm& parameter) co
 				cplexSP.setParam(IloCplex::Param::Preprocessing::Presolve, CPX_ON);
 			}
 
-			if (cplexSP.getCplexStatus() == IloCplex::CplexStatus::Infeasible) {
+			if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible) {
 				modelRMP.add(0 >= exprRhs(env, dualSP, X));		// Add feasibility cut.
 				integral ? ++incumbent.nFeasCutIP : ++incumbent.nFeasCutLP;
 			}
-			else if (cplexSP.getCplexStatus() == IloCplex::CplexStatus::Unbounded) {
+			else if (cplexSP.getStatus() == IloAlgorithm::Status::Unbounded) {
 				cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
 				cout << "The instance is unbounded! Terminate!" << endl;
 				incumbent.status = SolutionStatus::Unbounded;
 				break;
 			}
-			else if (cplexSP.getCplexStatus() == IloCplex::CplexStatus::Optimal) {
-				if (cplexRMP.getCplexStatus() == IloCplex::CplexStatus::Optimal) {
-					incumbent.LB = cplexRMP.getObjValue() + cplexRMP.getValue(eta);		// Renew LB.
+			else if (cplexSP.getStatus() == IloAlgorithm::Status::Optimal) {
+				if (cplexRMP.getStatus() == IloAlgorithm::Status::Optimal) {
+					incumbent.LB = cplexRMP.getObjValue();								// Renew LB.
 
-					if (integral && greaterThanReal(incumbent.objective, cplexRMP.getObjValue() + cplexSP.getObjValue(), PPM)) {
+					if (integral && greaterThanReal(incumbent.objective, cplexRMP.getObjValue() - cplexRMP.getValue(eta) + cplexSP.getObjValue(), PPM)) {
 						incumbent.renew(cplexRMP, X, eta, cplexSP, Y);					// Renew UB.
 						if (incumbent.status != SolutionStatus::Feasible) throw exception();
 					}
@@ -137,6 +144,7 @@ Solution Instance::solveBendersRecursive(const ParameterAlgorithm& parameter) co
 
 		incumbent.elapsedTime = runTime(last);
 		cout << "elapsed time (Instance::solveBendersRecursive): " << runTime(last) << endl;
+		incumbent.print();
 	}
 	catch (const exception& exc) {
 		printErrorAndExit("Instance::solveBendersRecursive", exc);

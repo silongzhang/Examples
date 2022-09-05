@@ -212,8 +212,8 @@ void setRhs(IloRange constraint, ConstraintType type, double rhs) {
 
 void Solution::renew(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, IloCplex cplexSP, IloNumVarArray Y) {
 	try {
-		objective = cplexRMP.getObjValue() + cplexSP.getObjValue();
-		LB = cplexRMP.getObjValue() + cplexRMP.getValue(eta);
+		objective = cplexRMP.getObjValue() - cplexRMP.getValue(eta) + cplexSP.getObjValue();
+		LB = cplexRMP.getObjValue();
 		valueInt = getValues(cplexRMP, X);
 		valueEta = cplexRMP.getValue(eta);
 		valueCont = getValues(cplexSP, Y);
@@ -229,5 +229,10 @@ void Solution::renew(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, IloCple
 	catch (const exception& exc) {
 		printErrorAndExit("Solution::renew", exc);
 	}
+}
+
+
+void Solution::print() const {
+	cout << "objective = " << objective << '\t' << "LB = " << LB << '\t' << "nOptCutLP = " << nOptCutLP << '\t' << "nOptCutIP = " << nOptCutIP << '\t' << "nFeasCutLP = " << nFeasCutLP << '\t' << "nFeasCutIP = " << nFeasCutIP << '\t' << "elapsedTime = " << elapsedTime << endl;
 }
 

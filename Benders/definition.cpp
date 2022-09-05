@@ -49,17 +49,17 @@ bool operator<=(const bitset<NMAX>& lhs, const bitset<NMAX>& rhs) {
 }
 
 
-bool solveModel(IloCplex& cplex) {
-	bool result = false;
+bool solveModel(IloCplex cplex) {
+	bool feasible = false;
 	try {
-		result = cplex.solve();
+		feasible = cplex.solve();
 		cout << "solution status = " << cplex.getStatus() << endl;
-		if (result) cout << "objective = " << cplex.getObjValue() << endl;
+		if (feasible) cout << "objective = " << cplex.getObjValue() << endl;
 	}
 	catch (const exception& exc) {
 		printErrorAndExit("solveModel", exc);
 	}
-	return result;
+	return feasible;
 }
 
 

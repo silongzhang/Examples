@@ -10,7 +10,7 @@ constexpr auto MILLI = 1e-3;
 constexpr auto PPM = 1e-6;
 constexpr auto PPB = 1e-9;
 constexpr auto TenTh = 1e4;
-constexpr auto InfinityPos = INFINITY;
+constexpr auto InfinityPos = 1e10;
 constexpr auto InfinityNeg = -InfinityPos;
 
 typedef IloArray<IloNumVarArray> IloNumVarArray2;
@@ -30,7 +30,7 @@ bool lessThanReal(const double &lhs, const double &rhs, const double &threshold)
 bool greaterThanReal(const double &lhs, const double &rhs, const double &threshold);
 bool equalToReal(const double &lhs, const double &rhs, const double &threshold);
 bool operator<=(const bitset<NMAX>& lhs, const bitset<NMAX>& rhs);
-bool solveModel(IloCplex& cplex);
+bool solveModel(IloCplex cplex);
 double EuclideanDistance(const double x1, const double y1, const double x2, const double y2);
 double setPrecision(const double num, const bool upDown, const int precision);
 bool isInteger(double num, double threshold);
