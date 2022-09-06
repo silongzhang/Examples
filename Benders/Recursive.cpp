@@ -108,10 +108,8 @@ Solution Instance::solveBendersRecursive(const ParameterAlgorithm& parameter) co
 				break;
 			}
 			else if (cplexSP.getStatus() == IloAlgorithm::Status::Optimal) {
-				if (integral && greaterThanReal(incumbent.objective, cplexRMP.getObjValue() - cplexRMP.getValue(eta) + cplexSP.getObjValue(), PPM)) {
+				if (integral && greaterThanReal(incumbent.objective, cplexRMP.getObjValue() - cplexRMP.getValue(eta) + cplexSP.getObjValue(), PPM))
 					incumbent.renew(cplexRMP, X, eta, cplexSP, Y);						// Renew UB.
-					if (incumbent.status != SolutionStatus::Feasible) throw exception();
-				}
 
 				if (lessThanReal(currentValEta, cplexSP.getObjValue(), PPM)) {
 					modelRMP.add(eta >= exprRhs(env, dualSP, X));						// Add optimality cut.

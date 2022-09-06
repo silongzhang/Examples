@@ -3,7 +3,7 @@
 // Implement the benders decomposition with callback.
 
 
-void Instance::initiateModels(IloEnv env, IloModel modelRMP, IloModel modelSP, IloNumVarArray X, IloNumVarArray Y, IloNumVar eta, const vector<double>& currentValInt, double currentValEta, IloRangeArray consSP) const {
+void Instance::initiateModels(IloEnv env, IloModel modelRMP, IloModel modelSP, IloNumVarArray X, IloNumVarArray Y, IloNumVar eta, const vector<double>& currentValInt, IloRangeArray consSP) const {
 	try {
 		// Define variables.
 		for (int i = 0; i < varInt.size; ++i)
@@ -60,7 +60,116 @@ bool solveLRMP(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, Solution& inc
 	catch (const exception& exc) {
 		printErrorAndExit("solveLRMP", exc);
 	}
+	return false;
+}
+
+
+bool solveSP(IloCplex cplexSP, IloRangeArray consSP, IloNumArray dualSP, Solution& incumbent, const vector<Constraint>& cpCons, const vector<double>& currentValInt) {
+	try {
+		// Set the right hand side of constraints in the SP.
+		for (int i = 0; i < consSP.getSize(); ++i) {
+			double rhs = cpCons[i].rhs - inner_product(cpCons[i].coefInt.begin(), cpCons[i].coefInt.end(), currentValInt.begin(), 0.0);
+			setRhs(consSP[i], cpCons[i].type, rhs);
+		}
+
+		solveModel(cplexSP);								// Solve the subproblem.
+
+		try {
+			cplexSP.getDuals(dualSP, consSP);				// Get dual values.
+		}
+		catch (const exception& exc) {
+			cplexSP.setParam(IloCplex::Param::Preprocessing::Presolve, CPX_OFF);
+			cplexSP.solve();								// Solve the subproblem.
+			cplexSP.getDuals(dualSP, consSP);				// Get dual values.
+			cplexSP.setParam(IloCplex::Param::Preprocessing::Presolve, CPX_ON);
+		}
+
+		if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible || cplexSP.getStatus() == IloAlgorithm::Status::Optimal)
+			return true;
+		else {
+			if (cplexSP.getStatus() == IloAlgorithm::Status::Unbounded) {
+				cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+				cout << "The instance might be unbounded! Terminate!" << endl;
+			}
+			incumbent.status = SolutionStatus::Unkown;
+			return false;
+		}
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("solveSP", exc);
+	}
+	return false;
+}
+
+
+bool addBendersCuts(IloEnv env, IloCplex cplexSP, IloModel modelRMP, IloNumVarArray X, IloNumVar eta, IloNumArray dualSP, Solution& incumbent, const Instance& instance, double currentValEta) {
+	try {
+		if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible)
+			modelRMP.add(0 >= instance.exprRhs(env, dualSP, X)), ++incumbent.nFeasCutLP;
+		else if (cplexSP.getStatus() == IloAlgorithm::Status::Optimal) {
+			if (lessThanReal(currentValEta, cplexSP.getObjValue(), PPM))
+				modelRMP.add(eta >= instance.exprRhs(env, dualSP, X)), ++incumbent.nOptCutLP;
+			else if (equalToReal(currentValEta, cplexSP.getObjValue(), PPM)) return false;
+			else throw exception();
+		}
+		else throw exception();
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("addBendersCuts", exc);
+	}
 	return true;
+}
+
+
+ILOLAZYCONSTRAINTCALLBACK7(LazyBendersCuts, IloNumVarArray, X, IloNumVarArray, Y, IloNumVar, eta, IloCplex, cplexSP, IloRangeArray, consSP, Solution&, incumbent, const Instance&, instance) {
+	try {
+		incumbent.LB = getBestObjValue();														// Renew LB.
+		if (greaterThanReal(getObjValue(), getIncumbentObjValue(), PPM)) return;
+
+		IloEnv env = getEnv();
+		IloNumArray valueX(env), dualSP(env);
+		getValues(valueX, X);
+		const vector<double> currentValInt = assign(valueX);
+		const double currentValEta = getValue(eta);
+
+		if (!solveSP(cplexSP, consSP, dualSP, incumbent, instance.cpCons, currentValInt)) throw exception();
+		if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible)
+			add(0 >= instance.exprRhs(env, dualSP, X)), ++incumbent.nFeasCutIP;					// Add feasibility cut.
+		else if (cplexSP.getStatus() == IloAlgorithm::Status::Optimal) {
+			if (greaterThanReal(incumbent.objective, getObjValue() - getValue(eta) + cplexSP.getObjValue(), PPM)) {
+				incumbent.objective = getObjValue() - getValue(eta) + cplexSP.getObjValue();	// Renew UB.
+				incumbent.valueInt = currentValInt;
+				incumbent.valueEta = currentValEta;
+				incumbent.valueCont = ::getValues(cplexSP, Y);
+				incumbent.status = SolutionStatus::Feasible;
+			}
+
+			if (lessThanReal(currentValEta, cplexSP.getObjValue(), PPM))
+				add(eta >= instance.exprRhs(env, dualSP, X)), ++incumbent.nOptCutIP;			// Add optimality cut.
+			else if (greaterThanReal(currentValEta, cplexSP.getObjValue(), PPM)) throw exception();
+
+			cout << "UB = " << incumbent.objective << '\t' << "LB = " << incumbent.LB << '\t' << "nOptCutLP = " << incumbent.nOptCutLP << '\t' << "nOptCutIP = " << incumbent.nOptCutIP << '\t' << "nFeasCutLP = " << incumbent.nFeasCutLP << '\t' << "nFeasCutIP = " << incumbent.nFeasCutIP << endl;
+		}
+		else throw exception();
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("LazyBendersCuts", exc);
+	}
+}
+
+
+ILOMIPINFOCALLBACK4(StoppingCriteria, bool&, aborted, const ParameterAlgorithm&, parameter, Solution&, incumbent, clock_t, start) {
+	try {
+		if (!aborted) {
+			if (parameter.stop(start, incumbent.objective, incumbent.LB)) {
+				aborted = true;
+				abort();
+			}
+		}
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("StoppingCriteria", exc);
+	}
 }
 
 
@@ -89,9 +198,10 @@ Solution Instance::solveBendersCallback(const ParameterAlgorithm& parameter) con
 		vector<double> currentValInt = vector<double>(NInt, 0);
 		double currentValEta = InfinityNeg;
 		IloRangeArray consSP(env);
+		IloNumArray dualSP(env);
 
 		// Initiate models.
-		initiateModels(env, modelRMP, modelSP, X, Y, eta, currentValInt, currentValEta, consSP);
+		initiateModels(env, modelRMP, modelSP, X, Y, eta, currentValInt, consSP);
 		IloCplex cplexRMP(modelRMP), cplexSP(modelSP);
 		cplexSP.setParam(IloCplex::RootAlg, IloCplex::Primal);
 
@@ -107,20 +217,33 @@ Solution Instance::solveBendersCallback(const ParameterAlgorithm& parameter) con
 			if (!proceed) break;
 
 			// Solve the SP.
+			proceed = solveSP(cplexSP, consSP, dualSP, incumbent, cpCons, currentValInt);
+			if (!proceed) break;
 
 			// Add Benders cuts.
-
+			if (!addBendersCuts(env, cplexSP, modelRMP, X, eta, dualSP, incumbent, *this, currentValEta)) break;
 		}
 
+		cplexSP.setOut(env.getNullStream());
+		bool aborted = false;
 		if (proceed) {
 			// Restore integrality constraints.
+			modelRMP.add(IloConversion(env, X, IloNumVar::Type::Int));
 
 			// Use callback to add lazy constraints.
+			cplexRMP.use(LazyBendersCuts(env, X, Y, eta, cplexSP, consSP, incumbent, *this));
 
+			// Use callback to stop the procedure according stopping criteria.
+			cplexRMP.use(StoppingCriteria(env, aborted, parameter, incumbent, start));
+
+			solveModel(cplexRMP);
+			incumbent.LB = cplexRMP.getBestObjValue();
 		}
 
+		if (incumbent.status == SolutionStatus::Feasible && !aborted) incumbent.status = SolutionStatus::Optimal;
 		incumbent.elapsedTime = runTime(start);
 		cout << "elapsed time (Instance::solveBendersCallback): " << runTime(start) << endl;
+		cout << "# of nodes that remain to be processed = " << cplexRMP.getNnodesLeft() << endl;
 		incumbent.print();
 	}
 	catch (const exception& exc) {

@@ -210,8 +210,12 @@ void setRhs(IloRange constraint, ConstraintType type, double rhs) {
 }
 
 
+// Only applicable to the case where both the RMP and SP are solved to optimality.
 void Solution::renew(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, IloCplex cplexSP, IloNumVarArray Y) {
 	try {
+		if (cplexRMP.getStatus() != IloAlgorithm::Status::Optimal || cplexSP.getStatus() != IloAlgorithm::Status::Optimal)
+			throw exception();
+
 		objective = cplexRMP.getObjValue() - cplexRMP.getValue(eta) + cplexSP.getObjValue();
 		LB = cplexRMP.getObjValue();
 		valueInt = getValues(cplexRMP, X);
@@ -225,6 +229,8 @@ void Solution::renew(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, IloCple
 				break;
 			}
 		}
+
+		if (status != SolutionStatus::Feasible) throw exception();
 	}
 	catch (const exception& exc) {
 		printErrorAndExit("Solution::renew", exc);

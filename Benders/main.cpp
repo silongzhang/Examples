@@ -27,11 +27,13 @@ int main(int argc, char** argv) {
 		prmTest.NItCons = 1e2;
 
 		Instance instance = prmTest.generateInstance();
-		cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+		cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
 		instance.solveSolver();
 		instance.standardize();
-		cout << endl << endl << endl << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+		cout << endl << endl << endl << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
 		instance.solveBendersRecursive(prmAlg);
+		cout << endl << endl << endl << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
+		instance.solveBendersCallback(prmAlg);
 	}
 	catch (const exception& exc) {
 		printErrorAndExit("main", exc);

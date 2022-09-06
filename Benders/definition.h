@@ -35,6 +35,7 @@ double EuclideanDistance(const double x1, const double y1, const double x2, cons
 double setPrecision(const double num, const bool upDown, const int precision);
 bool isInteger(double num, double threshold);
 void print(SolutionStatus status);
+vector<double> assign(const IloNumArray nums);
 
 template<typename T>
 void print1(ostream &os, const T &cont, const char character) {

@@ -103,3 +103,12 @@ void print(SolutionStatus status) {
 	}
 }
 
+
+vector<double> assign(const IloNumArray nums) {
+	vector<double> result(nums.getSize());
+	for (int i = 0; i < nums.getSize(); ++i)
+		result[i] = nums[i];
+
+	return result;
+}
+
