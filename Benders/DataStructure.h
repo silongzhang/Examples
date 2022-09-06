@@ -94,7 +94,9 @@ public:
 	void standardize();
 	bool solveSolver() const;
 	IloExpr exprRhs(IloEnv env, IloNumArray duals, IloNumVarArray vars) const;
+	void initiateModels(IloEnv env, IloModel modelRMP, IloModel modelSP, IloNumVarArray X, IloNumVarArray Y, IloNumVar eta, const vector<double>& currentValInt, double currentValEta, IloRangeArray consSP) const;
 	Solution solveBendersRecursive(const ParameterAlgorithm& parameter) const;
+	Solution solveBendersCallback(const ParameterAlgorithm& parameter) const;
 };
 
 
