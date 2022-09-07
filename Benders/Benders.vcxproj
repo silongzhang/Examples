@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BranchAndBound.cpp" />
+    <ClCompile Include="BranchAndCut.cpp" />
     <ClCompile Include="Callback.cpp" />
     <ClCompile Include="DataStructure.cpp" />
     <ClCompile Include="definition.cpp" />

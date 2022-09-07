@@ -102,13 +102,17 @@ bool solveSP(IloCplex cplexSP, IloRangeArray consSP, IloNumArray dualSP, Solutio
 }
 
 
-bool addBendersCuts(IloEnv env, IloCplex cplexSP, IloModel modelRMP, IloNumVarArray X, IloNumVar eta, IloNumArray dualSP, Solution& incumbent, const Instance& instance, double currentValEta) {
+bool addBendersCuts(IloEnv env, IloCplex cplexSP, IloModel modelRMP, IloNumVarArray X, IloNumVar eta, IloNumArray dualSP, Solution& incumbent, const Instance& instance, double currentValEta, bool integral) {
 	try {
-		if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible)
-			modelRMP.add(0 >= instance.exprRhs(env, dualSP, X)), ++incumbent.nFeasCutLP;
+		if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible) {
+			modelRMP.add(0 >= instance.exprRhs(env, dualSP, X));			// Add feasibility cut.
+			integral ? ++incumbent.nFeasCutIP : ++incumbent.nFeasCutLP;
+		}
 		else if (cplexSP.getStatus() == IloAlgorithm::Status::Optimal) {
-			if (lessThanReal(currentValEta, cplexSP.getObjValue(), PPM))
-				modelRMP.add(eta >= instance.exprRhs(env, dualSP, X)), ++incumbent.nOptCutLP;
+			if (lessThanReal(currentValEta, cplexSP.getObjValue(), PPM)) {
+				modelRMP.add(eta >= instance.exprRhs(env, dualSP, X));		// Add optimality cut.
+				integral ? ++incumbent.nOptCutIP : ++incumbent.nOptCutLP;
+			}
 			else if (equalToReal(currentValEta, cplexSP.getObjValue(), PPM)) return false;
 			else throw exception();
 		}
@@ -158,13 +162,11 @@ ILOLAZYCONSTRAINTCALLBACK7(LazyBendersCuts, IloNumVarArray, X, IloNumVarArray, Y
 }
 
 
-ILOMIPINFOCALLBACK4(StoppingCriteria, bool&, aborted, const ParameterAlgorithm&, parameter, Solution&, incumbent, clock_t, start) {
+ILOMIPINFOCALLBACK4(StoppingCriteria, bool&, aborted, const ParameterAlgorithm&, parameter, const Solution&, incumbent, clock_t, start) {
 	try {
-		if (!aborted) {
-			if (parameter.stop(start, incumbent.objective, incumbent.LB)) {
-				aborted = true;
-				abort();
-			}
+		if (!aborted && parameter.stop(start, incumbent.objective, incumbent.LB)) {
+			aborted = true;
+			abort();
 		}
 	}
 	catch (const exception& exc) {
@@ -195,7 +197,7 @@ Solution Instance::solveBendersCallback(const ParameterAlgorithm& parameter) con
 		IloNumVar eta(env, -IloInfinity, IloInfinity);
 		IloNumVarArray X(env), Y(env, NCont, 0, IloInfinity);
 		IloModel modelRMP(env), modelSP(env);
-		vector<double> currentValInt = vector<double>(NInt, 0);
+		vector<double> currentValInt(NInt, 0);
 		double currentValEta = InfinityNeg;
 		IloRangeArray consSP(env);
 		IloNumArray dualSP(env);
@@ -221,7 +223,7 @@ Solution Instance::solveBendersCallback(const ParameterAlgorithm& parameter) con
 			if (!proceed) break;
 
 			// Add Benders cuts.
-			if (!addBendersCuts(env, cplexSP, modelRMP, X, eta, dualSP, incumbent, *this, currentValEta)) break;
+			if (!addBendersCuts(env, cplexSP, modelRMP, X, eta, dualSP, incumbent, *this, currentValEta, false)) break;
 		}
 
 		cplexSP.setOut(env.getNullStream());
@@ -233,7 +235,7 @@ Solution Instance::solveBendersCallback(const ParameterAlgorithm& parameter) con
 			// Use callback to add lazy constraints.
 			cplexRMP.use(LazyBendersCuts(env, X, Y, eta, cplexSP, consSP, incumbent, *this));
 
-			// Use callback to stop the procedure according stopping criteria.
+			// Use callback to stop the procedure according to stopping criteria.
 			cplexRMP.use(StoppingCriteria(env, aborted, parameter, incumbent, start));
 
 			solveModel(cplexRMP);
@@ -243,7 +245,7 @@ Solution Instance::solveBendersCallback(const ParameterAlgorithm& parameter) con
 		if (incumbent.status == SolutionStatus::Feasible && !aborted) incumbent.status = SolutionStatus::Optimal;
 		incumbent.elapsedTime = runTime(start);
 		cout << "elapsed time (Instance::solveBendersCallback): " << runTime(start) << endl;
-		cout << "# of nodes that remain to be processed = " << cplexRMP.getNnodesLeft() << endl;
+		cout << "# of nodes processed = " << cplexRMP.getNnodes() << '\t' << "# of nodes remained = " << cplexRMP.getNnodesLeft() << endl;
 		incumbent.print();
 	}
 	catch (const exception& exc) {
