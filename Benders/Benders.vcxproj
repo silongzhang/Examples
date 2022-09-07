@@ -12,7 +12,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BranchAndCut.cpp" />
-    <ClCompile Include="Callback.cpp" />
+    <ClCompile Include="GenericCallback.cpp" />
+    <ClCompile Include="LegacyCallback.cpp" />
     <ClCompile Include="DataStructure.cpp" />
     <ClCompile Include="definition.cpp" />
     <ClCompile Include="main.cpp" />

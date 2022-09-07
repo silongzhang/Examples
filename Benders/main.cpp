@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 		cout << endl << endl << endl << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
 		instance.solveBendersRecursive(prmAlg);
 		cout << endl << endl << endl << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
-		instance.solveBendersCallback(prmAlg);
+		instance.solveBendersLegacyCallback(prmAlg);
 	}
 	catch (const exception& exc) {
 		printErrorAndExit("main", exc);

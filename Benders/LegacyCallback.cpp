@@ -1,6 +1,6 @@
 #include"DataStructure.h"
 
-// Implement the benders decomposition with callback.
+// Implement the benders decomposition with legacy callback.
 
 
 void Instance::initiateModels(IloEnv env, IloModel modelRMP, IloModel modelSP, IloNumVarArray X, IloNumVarArray Y, IloNumVar eta, const vector<double>& currentValInt, IloRangeArray consSP) const {
@@ -183,13 +183,13 @@ ILOMIPINFOCALLBACK4(StoppingCriteria, bool&, aborted, const ParameterAlgorithm&,
 // Assumption 6. Relaxed master problems (RMPs) cannot be unbounded.
 // Note 1. For a minimization problem, a sufficient condition for Assumption 6 is that integer variables are all nonnegative and their coefficients in the objective function are all nonnegative. A similar sufficient condition can be derived for a maximization problem.
 // Note 2. Another sufficient condition for Assumption 6 is that the number of feasible combinations of values of integer variables is finite. For example, each integer variable is bounded from both below and above.
-Solution Instance::solveBendersCallback(const ParameterAlgorithm& parameter) const {
+Solution Instance::solveBendersLegacyCallback(const ParameterAlgorithm& parameter) const {
 	Solution incumbent;
 	incumbent.clear();
 	IloEnv env;
 	try {
 		const clock_t start = clock();
-		cout << "Running Instance::solveBendersCallback ..." << endl;
+		cout << "Running Instance::solveBendersLegacyCallback ..." << endl;
 		if (!standard()) throw exception();
 		const int NInt = varInt.size, NCont = varCont.size;
 
@@ -244,12 +244,12 @@ Solution Instance::solveBendersCallback(const ParameterAlgorithm& parameter) con
 
 		if (incumbent.status == SolutionStatus::Feasible && !aborted) incumbent.status = SolutionStatus::Optimal;
 		incumbent.elapsedTime = runTime(start);
-		cout << "elapsed time (Instance::solveBendersCallback): " << runTime(start) << endl;
+		cout << "elapsed time (Instance::solveBendersLegacyCallback): " << runTime(start) << endl;
 		cout << "# of nodes processed = " << cplexRMP.getNnodes() << '\t' << "# of nodes remained = " << cplexRMP.getNnodesLeft() << endl;
 		incumbent.print();
 	}
 	catch (const exception& exc) {
-		printErrorAndExit("Instance::solveBendersCallback", exc);
+		printErrorAndExit("Instance::solveBendersLegacyCallback", exc);
 	}
 
 	env.end();

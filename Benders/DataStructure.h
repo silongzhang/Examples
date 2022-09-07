@@ -96,7 +96,7 @@ public:
 	IloExpr exprRhs(IloEnv env, IloNumArray duals, IloNumVarArray vars) const;
 	void initiateModels(IloEnv env, IloModel modelRMP, IloModel modelSP, IloNumVarArray X, IloNumVarArray Y, IloNumVar eta, const vector<double>& currentValInt, IloRangeArray consSP) const;
 	Solution solveBendersRecursive(const ParameterAlgorithm& parameter) const;
-	Solution solveBendersCallback(const ParameterAlgorithm& parameter) const;
+	Solution solveBendersLegacyCallback(const ParameterAlgorithm& parameter) const;
 };
 
 
@@ -137,11 +137,11 @@ void setRandomSignAndRhs(default_random_engine& engine, const vector<double>& mi
 IloRange genConsSolver(IloEnv env, IloIntVarArray X, IloNumVarArray Y, const Constraint& cons);
 
 
-// Recursive
-
-
-// Callback
+// LegacyCallback
 bool solveLRMP(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, Solution& incumbent, vector<double>& currentValInt, double& currentValEta);
 bool solveSP(IloCplex cplexSP, IloRangeArray consSP, IloNumArray dualSP, Solution& incumbent, const vector<Constraint>& cpCons, const vector<double>& currentValInt);
 bool addBendersCuts(IloEnv env, IloCplex cplexSP, IloModel modelRMP, IloNumVarArray X, IloNumVar eta, IloNumArray dualSP, Solution& incumbent, const Instance& instance, double currentValEta, bool integral);
+
+
+// BranchAndCut
 
