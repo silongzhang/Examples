@@ -34,6 +34,7 @@ bool solveModel(IloCplex cplex);
 double EuclideanDistance(const double x1, const double y1, const double x2, const double y2);
 double setPrecision(const double num, const bool upDown, const int precision);
 bool isInteger(double num, double threshold);
+bool isInteger(const vector<double>& nums, double threshold);
 void print(SolutionStatus status);
 vector<double> assign(const IloNumArray nums);
 

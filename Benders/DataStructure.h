@@ -144,4 +144,29 @@ bool addBendersCuts(IloEnv env, IloCplex cplexSP, IloModel modelRMP, IloNumVarAr
 
 
 // BranchAndCut
+class TreeNode {
+public:
+	int depth;
+	vector<pair<int, int>> branchCons;
+
+	vector<double> valueInt;
+	double valueEta;
+	vector<double> valueCont;
+	double objective;												// Is also a lower bound associated with the node.
+	bool integral;
+
+	TreeNode() :depth(1), valueEta(InfinityNeg), objective(InfinityPos), integral(false) {}
+	TreeNode(const Instance& instance);
+	int mostFractional() const;
+};
+
+
+class Tree {
+public:
+	int nNodesGenerated;
+	multimap<double, TreeNode> nodes;
+
+	Tree() :nNodesGenerated(0) {}
+	TreeNode selectNode();
+};
 

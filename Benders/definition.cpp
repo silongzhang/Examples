@@ -80,6 +80,15 @@ bool isInteger(double num, double threshold) {
 }
 
 
+bool isInteger(const vector<double>& nums, double threshold) {
+	for (const auto num : nums)
+		if (!isInteger(num, threshold))
+			return false;
+
+	return true;
+}
+
+
 void print(SolutionStatus status) {
 	switch (status)
 	{
