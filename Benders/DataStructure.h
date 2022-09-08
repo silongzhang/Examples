@@ -152,12 +152,14 @@ public:
 	vector<double> valueInt;
 	double valueEta;
 	vector<double> valueCont;
+	bool feasibleLP;												// Whether the associated LP relaxation is feasible.
 	double objective;												// Is also a lower bound associated with the node.
 	bool integral;
 
-	TreeNode() :depth(1), valueEta(InfinityNeg), objective(InfinityPos), integral(false) {}
+	TreeNode() :depth(1), valueEta(InfinityNeg), feasibleLP(false), objective(InfinityPos), integral(false) {}
 	TreeNode(const Instance& instance);
 	int mostFractional() const;
+	void setBounds(IloEnv env, IloNumVarArray X) const;
 };
 
 
@@ -168,5 +170,6 @@ public:
 
 	Tree() :nNodesGenerated(0) {}
 	TreeNode selectNode();
+	void branch(const TreeNode& node);
 };
 
