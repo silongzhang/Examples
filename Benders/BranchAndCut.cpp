@@ -1,6 +1,7 @@
 #include"DataStructure.h"
 
 // Implement the benders decomposition with branch-and-cut.
+// A naive implementation, which can be improved by valid inequalities, parallel search, dynamic search, etc.
 
 
 TreeNode::TreeNode(const Instance& instance) :depth(1), valueEta(InfinityNeg), feasibleLP(false), objective(InfinityPos), integral(false) {
@@ -204,7 +205,7 @@ Solution Instance::solveBendersBC(const ParameterAlgorithm& parameter) const {
 			tree.nodes.insert(make_pair(incumbent.LB, TreeNode(*this)));			// The root node.
 			tree.nNodesGenerated = 1;
 			for (int iter = 1; !tree.nodes.empty() && !parameter.stop(start, incumbent.objective, incumbent.LB); ++iter) {
-				incumbent.LB = tree.nodes.begin()->first;							// Renew LB.
+				incumbent.LB = min(tree.nodes.begin()->first, incumbent.objective);	// Renew LB.
 
 				if (iter % parameter.iterPrintBC == 0) {
 					cout << "+++++++++++++++++++++++++++++" << endl;
@@ -212,30 +213,34 @@ Solution Instance::solveBendersBC(const ParameterAlgorithm& parameter) const {
 				}
 
 				TreeNode node(tree.selectNode());									// Node selection.
-				node.solve(cplexRMP, modelRMP, X, eta, cplexSP, Y, consSP, incumbent, *this);		// Solve the LP relaxation.
-				if (!node.feasibleLP)
-					++nInfeas;														// Pruned due to infeasibility.
-				else if (greaterThanReal(node.objective, incumbent.objective, PPM))
+				if (greaterThanReal(node.objective, incumbent.objective, PPM))
 					++nBound;														// Pruned due to boundedness.
-				else if (node.integral) {
-					++nIt;															// Pruned due to integrality.
-					if (greaterThanReal(incumbent.objective, node.objective, PPM)) {
-						incumbent.status = SolutionStatus::Feasible;
-						incumbent.objective = node.objective;						// Renew UB.
-						incumbent.valueInt = node.valueInt;
-						incumbent.valueEta = node.valueEta;
-						incumbent.valueCont = node.valueCont;
-						cout << "Found a better solution with objective = " << incumbent.objective << endl;
-					}
-				}
 				else {
-					++nBranch;														// Branched.
-					tree.branch(node);
+					node.solve(cplexRMP, modelRMP, X, eta, cplexSP, Y, consSP, incumbent, *this);		// Solve the LP relaxation.
+					if (!node.feasibleLP)
+						++nInfeas;														// Pruned due to infeasibility.
+					else if (greaterThanReal(node.objective, incumbent.objective, PPM))
+						++nBound;														// Pruned due to boundedness.
+					else if (node.integral) {
+						++nIt;															// Pruned due to integrality.
+						if (greaterThanReal(incumbent.objective, node.objective, PPM)) {
+							incumbent.status = SolutionStatus::Feasible;
+							incumbent.objective = node.objective;						// Renew UB.
+							incumbent.valueInt = node.valueInt;
+							incumbent.valueEta = node.valueEta;
+							incumbent.valueCont = node.valueCont;
+							cout << "Found a better solution with objective = " << incumbent.objective << endl;
+						}
+					}
+					else {
+						++nBranch;														// Branched.
+						tree.branch(node);
+					}
 				}
 			}
 
 			if (!tree.nodes.empty()) {
-				incumbent.LB = tree.nodes.begin()->first;
+				incumbent.LB = min(tree.nodes.begin()->first, incumbent.objective);
 				if (equalToReal(incumbent.objective, incumbent.LB, PPM))
 					incumbent.status = SolutionStatus::Optimal;
 			}
