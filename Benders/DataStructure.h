@@ -69,8 +69,9 @@ class ParameterAlgorithm {
 public:
 	double timeLimit;
 	double optThreshold;
+	int iterPrintBC;												// Print log information every iterPrintBC iterations.
 
-	ParameterAlgorithm() :timeLimit(InfinityPos), optThreshold(0) {}
+	ParameterAlgorithm() :timeLimit(InfinityPos), optThreshold(0), iterPrintBC(100) {}
 	bool stop(clock_t last, double UB, double LB) const {
 		return !lessThanReal(runTime(last), timeLimit, PPM) || !greaterThanReal(abs((UB - LB) / LB), optThreshold, 0);
 	}
@@ -97,6 +98,7 @@ public:
 	void initiateModels(IloEnv env, IloModel modelRMP, IloModel modelSP, IloNumVarArray X, IloNumVarArray Y, IloNumVar eta, const vector<double>& currentValInt, IloRangeArray consSP) const;
 	Solution solveBendersRecursive(const ParameterAlgorithm& parameter) const;
 	Solution solveBendersLegacyCallback(const ParameterAlgorithm& parameter) const;
+	Solution solveBendersBC(const ParameterAlgorithm& parameter) const;
 };
 
 

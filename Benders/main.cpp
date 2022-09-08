@@ -34,6 +34,9 @@ int main(int argc, char** argv) {
 		instance.solveBendersRecursive(prmAlg);
 		cout << endl << endl << endl << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
 		instance.solveBendersLegacyCallback(prmAlg);
+		cout << endl << endl << endl << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
+		prmAlg.iterPrintBC = 1e3;
+		instance.solveBendersBC(prmAlg);
 	}
 	catch (const exception& exc) {
 		printErrorAndExit("main", exc);
