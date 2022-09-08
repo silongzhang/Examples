@@ -86,3 +86,60 @@ void TreeNode::setBounds(IloEnv env, IloNumVarArray X) const {
 	}
 }
 
+
+void TreeNode::solve(IloCplex cplexRMP, IloModel modelRMP, IloNumVarArray X, IloNumVar eta, IloCplex cplexSP, IloNumVarArray Y, IloRangeArray consSP, Solution& incumbent, const Instance& instance) {
+	try {
+		IloEnv env = cplexRMP.getEnv();
+		setBounds(env, X);												// Set branching constraints.
+
+		while (true) {
+			solveModel(cplexRMP);										// Solve the LP relaxation of the RMP.
+			if (cplexRMP.getStatus() == IloAlgorithm::Status::Infeasible) {
+				feasibleLP = false;
+				break;
+			}
+			else if (cplexRMP.getStatus() != IloAlgorithm::Status::Optimal)
+				throw exception();
+			else {
+				valueInt = getValues(cplexRMP, X);
+				valueEta = cplexRMP.getValue(eta);
+				feasibleLP = true;
+				objective = cplexRMP.getObjValue();
+
+				if (!isInteger(valueInt, PPM)) break;
+				else {
+					// Set the right hand side of constraints in the SP.
+					for (int i = 0; i < consSP.getSize(); ++i) {
+						double rhs = instance.cpCons[i].rhs - inner_product(instance.cpCons[i].coefInt.begin(), instance.cpCons[i].coefInt.end(), valueInt.begin(), 0.0);
+						setRhs(consSP[i], instance.cpCons[i].type, rhs);
+					}
+
+					solveModel(cplexSP);								// Solve the subproblem.
+					IloNumArray dualSP(getDuals(cplexSP, consSP));		// Get dual values.
+
+					if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible) {
+						modelRMP.add(0 >= instance.exprRhs(env, dualSP, X));			// Add feasibility cut.
+						++incumbent.nFeasCutIP;
+					}
+					else if (cplexSP.getStatus() == IloAlgorithm::Status::Optimal) {
+						if (lessThanReal(valueEta, cplexSP.getObjValue(), PPM)) {
+							modelRMP.add(eta >= instance.exprRhs(env, dualSP, X));		// Add optimality cut.
+							++incumbent.nOptCutIP;
+						}
+						else if (equalToReal(valueEta, cplexSP.getObjValue(), PPM)) {
+							valueCont = getValues(cplexSP, Y);
+							integral = true;
+							break;
+						}
+						else throw exception();
+					}
+					else throw exception();
+				}
+			}
+		}
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("TreeNode::solve", exc);
+	}
+}
+

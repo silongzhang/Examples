@@ -106,6 +106,7 @@ void addConstraint(IloModel model, const vector<double>& coefs, IloNumVarArray v
 IloRange genCons(IloEnv env, const vector<double>& coefs, IloNumVarArray vars, ConstraintType type, double rhs);
 vector<double> getValues(IloCplex cplex, IloNumVarArray vars);
 void setRhs(IloRange constraint, ConstraintType type, double rhs);
+IloNumArray getDuals(IloCplex cplexSP, const IloRangeArray consSP);
 
 
 // Test
@@ -160,6 +161,7 @@ public:
 	TreeNode(const Instance& instance);
 	int mostFractional() const;
 	void setBounds(IloEnv env, IloNumVarArray X) const;
+	void solve(IloCplex cplexRMP, IloModel modelRMP, IloNumVarArray X, IloNumVar eta, IloCplex cplexSP, IloNumVarArray Y, IloRangeArray consSP, Solution& incumbent, const Instance& instance);
 };
 
 

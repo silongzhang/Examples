@@ -244,3 +244,23 @@ void Solution::print() const {
 	cout << '\t' << "objective = " << objective << '\t' << "LB = " << LB << '\t' << "nOptCutLP = " << nOptCutLP << '\t' << "nOptCutIP = " << nOptCutIP << '\t' << "nFeasCutLP = " << nFeasCutLP << '\t' << "nFeasCutIP = " << nFeasCutIP << '\t' << "elapsedTime = " << elapsedTime << endl;
 }
 
+
+IloNumArray getDuals(IloCplex cplexSP, const IloRangeArray consSP) {
+	IloNumArray dualSP(cplexSP.getEnv());
+	try {
+		try {
+			cplexSP.getDuals(dualSP, consSP);				// Get dual values.
+		}
+		catch (const exception& exc) {
+			cplexSP.setParam(IloCplex::Param::Preprocessing::Presolve, CPX_OFF);
+			cplexSP.solve();								// Solve the subproblem.
+			cplexSP.getDuals(dualSP, consSP);				// Get dual values.
+			cplexSP.setParam(IloCplex::Param::Preprocessing::Presolve, CPX_ON);
+		}
+	}
+	catch (const exception& exc) {
+		printErrorAndExit("getDuals", exc);
+	}
+	return dualSP;
+}
+
