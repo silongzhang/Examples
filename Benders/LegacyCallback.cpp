@@ -73,19 +73,10 @@ bool solveSP(IloCplex cplexSP, IloRangeArray consSP, IloNumArray dualSP, Solutio
 		}
 
 		solveModel(cplexSP);								// Solve the subproblem.
-
-		try {
-			cplexSP.getDuals(dualSP, consSP);				// Get dual values.
-		}
-		catch (const exception& exc) {
-			cplexSP.setParam(IloCplex::Param::Preprocessing::Presolve, CPX_OFF);
-			cplexSP.solve();								// Solve the subproblem.
-			cplexSP.getDuals(dualSP, consSP);				// Get dual values.
-			cplexSP.setParam(IloCplex::Param::Preprocessing::Presolve, CPX_ON);
-		}
-
-		if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible || cplexSP.getStatus() == IloAlgorithm::Status::Optimal)
+		if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible || cplexSP.getStatus() == IloAlgorithm::Status::Optimal) {
+			dualSP = getDuals(cplexSP, consSP);				// Get dual values.
 			return true;
+		}
 		else {
 			if (cplexSP.getStatus() == IloAlgorithm::Status::Unbounded) {
 				cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;

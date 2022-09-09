@@ -3,15 +3,43 @@
 // Implement the benders decomposition with generic callback.
 
 
-tuple<SolutionStatus, double, vector<double>> Instance::solveNewSP(const vector<double>& valInt) const {
+tuple<SolutionStatus, double, vector<double>> Instance::solveNewSP(const vector<double>& valInt, Solution& incumbent) const {
 	tuple<SolutionStatus, double, vector<double>> result;
+	IloEnv env;
 	try {
+		// Declare modeling components.
+		IloNumVarArray Y(env, varCont.size, 0, IloInfinity);
+		IloModel modelSP(env);
+		IloExpr expr = product(env, obj.coefCont, Y);
+		modelSP.add(IloMinimize(env, expr));
+		IloRangeArray consSP(env);
+		for (const auto& cons : cpCons) {
+			double rhs = cons.rhs - inner_product(cons.coefInt.begin(), cons.coefInt.end(), valInt.begin(), 0.0);
+			consSP.add(genCons(env, cons.coefCont, Y, cons.type, rhs));
+		}
+		modelSP.add(consSP);
 
+		// Solve the SP.
+		IloCplex cplexSP(modelSP);
+		cplexSP.setParam(IloCplex::RootAlg, IloCplex::Primal);
+		IloNumArray dualSP(env);
+		if (!solveSP(cplexSP, consSP, dualSP, incumbent, cpCons, valInt)) throw exception();
+
+		get<2>(result) = assign(dualSP);
+		if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible) {
+			get<0>(result) = SolutionStatus::Infeasible;
+		}
+		else if (cplexSP.getStatus() == IloAlgorithm::Status::Optimal) {
+			get<0>(result) = SolutionStatus::Optimal;
+			get<1>(result) = cplexSP.getObjValue();
+		}
+		else throw exception();
 	}
 	catch (const exception& exc) {
-		printErrorAndExit("Instance::solveSP", exc);
+		printErrorAndExit("Instance::solveNewSP", exc);
 	}
 
+	env.end();
 	return result;
 }
 
@@ -33,6 +61,21 @@ void BendersGenericCallback::invoke(const IloCplex::Callback::Context& context) 
 			else throw exception();						// The LP relaxation of the RMP is unbounded.
 		}
 		else throw exception();							// Unexpected context ID.
+
+		// Solve the SP.
+		const auto res = instance.solveNewSP(valInt, incumbent);
+		IloNumArray dualSP(env, get<2>(res).size());
+		for (int i = 0; i < dualSP.getSize(); ++i) dualSP[i] = get<2>(res)[i];
+
+		if (get<0>(res) == SolutionStatus::Infeasible) {
+			IloRange cons(env, -IloInfinity, instance.exprRhs(env, dualSP, X), 0);
+			context.rejectCandidate(cons);
+			++incumbent.nFeasCutIP;
+		}
+		else if (get<0>(res) == SolutionStatus::Optimal) {
+
+		}
+		else throw exception();
 
 
 

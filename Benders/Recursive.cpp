@@ -86,31 +86,22 @@ Solution Instance::solveBendersRecursive(const ParameterAlgorithm& parameter) co
 			else throw exception();
 
 			solveModel(cplexSP);								// Solve the subproblem.
-			IloNumArray dualSP(env);
-			try {
-				cplexSP.getDuals(dualSP, consSP);				// Get dual values.
-			}
-			catch (const exception& exc) {
-				cplexSP.setParam(IloCplex::Param::Preprocessing::Presolve, CPX_OFF);
-				cplexSP.solve();								// Solve the subproblem.
-				cplexSP.getDuals(dualSP, consSP);				// Get dual values.
-				cplexSP.setParam(IloCplex::Param::Preprocessing::Presolve, CPX_ON);
-			}
-
-			if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible) {
-				modelRMP.add(0 >= exprRhs(env, dualSP, X));		// Add feasibility cut.
-				integral ? ++incumbent.nFeasCutIP : ++incumbent.nFeasCutLP;
-			}
-			else if (cplexSP.getStatus() == IloAlgorithm::Status::Unbounded) {
+			if (cplexSP.getStatus() == IloAlgorithm::Status::Unbounded) {
 				cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
 				cout << "The instance might be unbounded! Terminate!" << endl;
 				incumbent.status = SolutionStatus::Unkown;
 				break;
 			}
+			else if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible) {
+				IloNumArray dualSP(getDuals(cplexSP, consSP));							// Get dual values.
+				modelRMP.add(0 >= exprRhs(env, dualSP, X));								// Add feasibility cut.
+				integral ? ++incumbent.nFeasCutIP : ++incumbent.nFeasCutLP;
+			}
 			else if (cplexSP.getStatus() == IloAlgorithm::Status::Optimal) {
 				if (integral && greaterThanReal(incumbent.objective, cplexRMP.getObjValue() - cplexRMP.getValue(eta) + cplexSP.getObjValue(), PPM))
 					incumbent.renew(cplexRMP, X, eta, cplexSP, Y);						// Renew UB.
 
+				IloNumArray dualSP(getDuals(cplexSP, consSP));							// Get dual values.
 				if (lessThanReal(currentValEta, cplexSP.getObjValue(), PPM)) {
 					modelRMP.add(eta >= exprRhs(env, dualSP, X));						// Add optimality cut.
 					integral ? ++incumbent.nOptCutIP : ++incumbent.nOptCutLP;
@@ -118,10 +109,10 @@ Solution Instance::solveBendersRecursive(const ParameterAlgorithm& parameter) co
 				else if (equalToReal(currentValEta, cplexSP.getObjValue(), PPM)) {
 					if (integral) {
 						incumbent.status = SolutionStatus::Optimal;
-						break;									// Solved to optimality.
+						break;															// Solved to optimality.
 					}
 					else {
-						integral = true;						// Restore integrality constraints.
+						integral = true;												// Restore integrality constraints.
 						modelRMP.add(IloConversion(env, X, IloNumVar::Type::Int));
 					}
 				}

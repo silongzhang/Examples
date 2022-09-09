@@ -96,7 +96,7 @@ public:
 	bool solveSolver() const;
 	IloExpr exprRhs(IloEnv env, IloNumArray duals, IloNumVarArray vars) const;
 	void initiateModels(IloEnv env, IloModel modelRMP, IloModel modelSP, IloNumVarArray X, IloNumVarArray Y, IloNumVar eta, const vector<double>& currentValInt, IloRangeArray consSP) const;
-	tuple<SolutionStatus, double, vector<double>> solveNewSP(const vector<double>& valInt) const;
+	tuple<SolutionStatus, double, vector<double>> solveNewSP(const vector<double>& valInt, Solution& incumbent) const;
 	Solution solveBendersRecursive(const ParameterAlgorithm& parameter) const;
 	Solution solveBendersLegacyCallback(const ParameterAlgorithm& parameter) const;
 	Solution solveBendersGenericCallback(const ParameterAlgorithm& parameter) const;

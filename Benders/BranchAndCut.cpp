@@ -116,14 +116,14 @@ void TreeNode::solve(IloCplex cplexRMP, IloModel modelRMP, IloNumVarArray X, Ilo
 						setRhs(consSP[i], instance.cpCons[i].type, rhs);
 					}
 
-					solveModel(cplexSP);								// Solve the subproblem.
-					IloNumArray dualSP(getDuals(cplexSP, consSP));		// Get dual values.
-
+					solveModel(cplexSP);												// Solve the subproblem.
 					if (cplexSP.getStatus() == IloAlgorithm::Status::Infeasible) {
+						IloNumArray dualSP(getDuals(cplexSP, consSP));					// Get dual values.
 						modelRMP.add(0 >= instance.exprRhs(env, dualSP, X));			// Add feasibility cut.
 						++incumbent.nFeasCutIP;
 					}
 					else if (cplexSP.getStatus() == IloAlgorithm::Status::Optimal) {
+						IloNumArray dualSP(getDuals(cplexSP, consSP));					// Get dual values.
 						if (lessThanReal(valueEta, cplexSP.getObjValue(), PPM)) {
 							modelRMP.add(eta >= instance.exprRhs(env, dualSP, X));		// Add optimality cut.
 							++incumbent.nOptCutIP;
