@@ -64,7 +64,7 @@ bool solveLRMP(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, Solution& inc
 }
 
 
-bool solveSP(IloCplex cplexSP, IloRangeArray consSP, IloNumArray dualSP, Solution& incumbent, const vector<Constraint>& cpCons, const vector<double>& currentValInt) {
+bool solveSP(IloCplex cplexSP, IloRangeArray consSP, IloNumArray& dualSP, Solution& incumbent, const vector<Constraint>& cpCons, const vector<double>& currentValInt) {
 	try {
 		// Set the right hand side of constraints in the SP.
 		for (int i = 0; i < consSP.getSize(); ++i) {

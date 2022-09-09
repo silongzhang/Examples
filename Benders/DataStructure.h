@@ -96,7 +96,6 @@ public:
 	bool solveSolver() const;
 	IloExpr exprRhs(IloEnv env, IloNumArray duals, IloNumVarArray vars) const;
 	void initiateModels(IloEnv env, IloModel modelRMP, IloModel modelSP, IloNumVarArray X, IloNumVarArray Y, IloNumVar eta, const vector<double>& currentValInt, IloRangeArray consSP) const;
-	tuple<SolutionStatus, double, vector<double>> solveNewSP(const vector<double>& valInt, Solution& incumbent) const;
 	Solution solveBendersRecursive(const ParameterAlgorithm& parameter) const;
 	Solution solveBendersLegacyCallback(const ParameterAlgorithm& parameter) const;
 	Solution solveBendersGenericCallback(const ParameterAlgorithm& parameter) const;
@@ -144,7 +143,7 @@ IloRange genConsSolver(IloEnv env, IloIntVarArray X, IloNumVarArray Y, const Con
 
 // LegacyCallback
 bool solveLRMP(IloCplex cplexRMP, IloNumVarArray X, IloNumVar eta, Solution& incumbent, vector<double>& currentValInt, double& currentValEta);
-bool solveSP(IloCplex cplexSP, IloRangeArray consSP, IloNumArray dualSP, Solution& incumbent, const vector<Constraint>& cpCons, const vector<double>& currentValInt);
+bool solveSP(IloCplex cplexSP, IloRangeArray consSP, IloNumArray& dualSP, Solution& incumbent, const vector<Constraint>& cpCons, const vector<double>& currentValInt);
 bool addBendersCuts(IloEnv env, IloCplex cplexSP, IloModel modelRMP, IloNumVarArray X, IloNumVar eta, IloNumArray dualSP, Solution& incumbent, const Instance& instance, double currentValEta, bool integral);
 
 
