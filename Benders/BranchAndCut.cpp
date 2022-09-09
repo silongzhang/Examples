@@ -1,7 +1,7 @@
 #include"DataStructure.h"
 
 // Implement the benders decomposition with branch-and-cut.
-// A naive implementation, which can be improved by valid inequalities, parallel search, dynamic search, etc.
+// A naive implementation. When applied to a specific problem, one can improve the implementation by techniques utilizing the associated problem structure, such as well-designed branch strategies, valid inequalities, parallel search and heuristic search.
 
 
 TreeNode::TreeNode(const Instance& instance) :depth(1), valueEta(InfinityNeg), feasibleLP(false), objective(InfinityPos), integral(false) {

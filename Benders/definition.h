@@ -98,22 +98,3 @@ public:
 	}
 };
 
-class thread_guard
-{
-private:
-	thread &t;
-public:
-	// constructor
-	explicit thread_guard(thread &myT) :t(myT) {}
-	// destructor
-	~thread_guard()
-	{
-		if (t.joinable())
-		{
-			t.join();
-		}
-	}
-	thread_guard(const thread_guard &) = delete;
-	thread_guard& operator=(const thread_guard &) = delete;
-};
-
