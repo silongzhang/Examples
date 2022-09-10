@@ -35,6 +35,8 @@ int main(int argc, char** argv) {
 		cout << endl << endl << endl << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
 		instance.solveBendersLegacyCallback(prmAlg);
 		cout << endl << endl << endl << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
+		instance.solveBendersGenericCallback(prmAlg);
+		cout << endl << endl << endl << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
 		prmAlg.iterPrintBC = 1e3;
 		instance.solveBendersBC(prmAlg);
 	}
