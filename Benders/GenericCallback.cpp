@@ -18,13 +18,14 @@ void BendersGenericCallback::invoke(const IloCplex::Callback::Context& context) 
 			double valEta = context.getCandidatePoint(eta);
 
 			// Define the subproblem.
-			IloNumVarArray Y(env, instance.varCont.size, 0, IloInfinity);
-			IloModel modelSP(env);
-			modelSP.add(IloMinimize(env, product(env, instance.obj.coefCont, Y)));
-			IloRangeArray consSP(env);
+			IloEnv envSP;
+			IloNumVarArray Y(envSP, instance.varCont.size, 0, IloInfinity);
+			IloModel modelSP(envSP);
+			modelSP.add(IloMinimize(envSP, product(envSP, instance.obj.coefCont, Y)));
+			IloRangeArray consSP(envSP);
 			for (const auto& cons : instance.cpCons) {
 				double rhs = cons.rhs - inner_product(cons.coefInt.begin(), cons.coefInt.end(), valInt.begin(), 0.0);
-				consSP.add(genCons(env, cons.coefCont, Y, cons.type, rhs));
+				consSP.add(genCons(envSP, cons.coefCont, Y, cons.type, rhs));
 			}
 			modelSP.add(consSP);
 
@@ -57,6 +58,7 @@ void BendersGenericCallback::invoke(const IloCplex::Callback::Context& context) 
 				else if (greaterThanReal(valEta, cplexSP.getObjValue(), PPM)) throw exception();
 			}
 			else throw exception();
+			envSP.end();
 		}
 		else throw exception();							// Unexpected context ID or unbounded LP relaxation.
 	}
@@ -66,6 +68,14 @@ void BendersGenericCallback::invoke(const IloCplex::Callback::Context& context) 
 }
 
 
+// Assumption 1. The MILP model has a finite optimal objective value.
+// Assumption 2. # of integer variables > 0 and # of continuous variables > 0.
+// Assumption 3. Variables are already transformed to be nonnegative.
+// Assumption 4. Invoke the method "standardize" in advance if the instance is not "standard".
+// Assumption 5. It gives the opposite number of the optimal objective value of the original instance if it is a maximization problem.
+// Assumption 6. Relaxed master problems (RMPs) cannot be unbounded.
+// Note 1. For a minimization problem, a sufficient condition for Assumption 6 is that integer variables are all nonnegative and their coefficients in the objective function are all nonnegative. A similar sufficient condition can be derived for a maximization problem.
+// Note 2. Another sufficient condition for Assumption 6 is that the number of feasible combinations of values of integer variables is finite. For example, each integer variable is bounded from both below and above.
 Solution Instance::solveBendersGenericCallback(const ParameterAlgorithm& parameter) const {
 	Solution incumbent;
 	incumbent.clear();
