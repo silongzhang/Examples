@@ -15,9 +15,8 @@ int main(int argc, char** argv) {
 	const vector<double> demand = { 50000,100000,50000 };					// Demand quantities of markets.
 	const vector<vector<double>> costTransPltWrh = { {0,5},{4,2} };			// Transportation rates between plants and warehouses.
 	const vector<vector<double>> costTransWrhMrk = { {3,4,5},{2,1,2} };		// Transportation rates between warehouses and markets.
-	//const vector<double> fixedCost = { 0,0 };								// Fixed costs of plants.
-	//const vector<double> fixedCost = { 100000,100000 };						// Fixed costs of plants.
-	const vector<double> fixedCost = { 100000,300000 };						// Fixed costs of plants.
+	const vector<double> fixedCost = { 40000,40000 };						// Fixed costs of plants.
+	//const vector<double> fixedCost = { 80000,80000 };						// Fixed costs of plants.
 
 	IloEnv env;
 	IloModel model(env);
