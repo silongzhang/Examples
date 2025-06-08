@@ -3,11 +3,11 @@
 int main(int argc, char** argv) {
 	try {
 		// Run through command lines.
-		//if (argc != 2)
-		//	throw exception();
-		//const string inst(argv[1]);
+		if (argc != 2)
+			throw exception();
+		const string inst(argv[1]);
 
-		const string inst = "202505";
+		//const string inst = "202505";
 
 		const string inputFile = "input_" + inst + ".txt";
 
