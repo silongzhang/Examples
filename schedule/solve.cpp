@@ -8,15 +8,30 @@ void Input::solve() {
 
 		// Define the model.
 		IloModel model(env);
-		model.add(IloMinimize(env, 0));
 
 		// Define the variables.
 		vector<vector<IloBoolVarArray>> X(NPerson);
+		vector<IloBoolVarArray> Y(NPerson);
 		for (int i = 0; i < NPerson; ++i) {
 			X[i].resize(NDay);
 			for (int j = 0; j < NDay; ++j) {
 				X[i][j] = IloBoolVarArray(env, NShift);
 			}
+
+			Y[i] = IloBoolVarArray(env, NDay - 1);
+		}
+
+		// Define the objective function.
+		{
+			IloExpr expr(env);
+			for (int i = 0; i < NPerson; ++i) {
+				for (int j = 0; j < NDay - 1; ++j) {
+					model.add(Y[i][j] >= X[i][j][0] - X[i][j + 1][0]);
+					expr += Y[i][j];
+				}
+			}
+			model.add(IloMinimize(env, expr));
+			expr.end();
 		}
 
 		// Define the constraints.
