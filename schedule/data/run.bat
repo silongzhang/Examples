@@ -1,4 +1,4 @@
-schedule	202505
+schedule	202507
 
 goto :end
 

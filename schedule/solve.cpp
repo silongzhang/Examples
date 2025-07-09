@@ -11,6 +11,7 @@ void Input::solve() {
 
 		// Define the variables.
 		vector<vector<IloBoolVarArray>> X(NPerson);
+		vector<IloBoolVarArray> U(NPerson), V(NPerson);
 		vector<IloBoolVarArray> Y(NPerson);
 		for (int i = 0; i < NPerson; ++i) {
 			X[i].resize(NDay);
@@ -18,17 +19,29 @@ void Input::solve() {
 				X[i][j] = IloBoolVarArray(env, NShift);
 			}
 
-			Y[i] = IloBoolVarArray(env, NDay - 1);
+			U[i] = IloBoolVarArray(env, NDay);
+			V[i] = IloBoolVarArray(env, NDay);
+			Y[i] = IloBoolVarArray(env, NDay);
 		}
 
 		// Define the objective function.
+		// Minimize the number of single-rests.
 		{
 			IloExpr expr(env);
 			for (int i = 0; i < NPerson; ++i) {
-				for (int j = 0; j < NDay - 1; ++j) {
-					model.add(Y[i][j] >= X[i][j][0] - X[i][j + 1][0]);
+				int j = 0;
+				model.add(U[i][j] >= X[i][j][0] - X[i][j + 1][0]);
+				expr += U[i][j];
+
+				for (j = 1; j < NDay - 1; ++j) {
+					model.add(U[i][j] >= X[i][j][0] - X[i][j + 1][0]);
+					model.add(V[i][j] >= X[i][j][0] - X[i][j - 1][0]);
+					model.add(Y[i][j] >= U[i][j] + V[i][j] - 1);
 					expr += Y[i][j];
 				}
+
+				model.add(V[i][j] >= X[i][j][0] - X[i][j - 1][0]);
+				expr += V[i][j];
 			}
 			model.add(IloMinimize(env, expr));
 			expr.end();
