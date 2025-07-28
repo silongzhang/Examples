@@ -109,6 +109,7 @@ void Input::solve() {
 
 		// Solve the model.
 		IloCplex cplex(model);
+		cplex.exportModel("model.lp");
 		if (!cplex.solve())
 			throw exception();
 		cout << "objective = " << cplex.getObjValue() << '\t' << "solution status = " << cplex.getStatus() << endl;
