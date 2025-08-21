@@ -109,6 +109,7 @@ void Input::solve() {
 
 		// Solve the model.
 		IloCplex cplex(model);
+		cplex.setParam(IloCplex::Param::MIP::Limits::Solutions, NSol);
 		cplex.exportModel("model.lp");
 		if (!cplex.solve())
 			throw exception();

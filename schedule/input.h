@@ -14,6 +14,8 @@ public:
 	int NShift;
 	int MCWD;
 
+	int NSol;
+
 	vector<int> DayName;
 	vector<int> PersonName;
 	vector<char> ShiftName;
