@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
 		const string outputFile = "output_" + inst + ".csv";
 
 		Input input(inputFile);
-		input.NSol = 10;
+		input.NSol = 5;
 		input.solve();
 		input.printSolution(outputFile);
 	}
